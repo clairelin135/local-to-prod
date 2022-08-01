@@ -140,8 +140,8 @@ def repo():
                     "user": "BOLLINGER",
                     # password in config is bad practice
                     "password": {"env": "SYSTEM_SNOWFLAKE_PASSWORD"},
-                    "database": "PRODUCTION",
-                    "schema": "HACKER_NEWS",
+                    "database": "BOLLINGER",
+                    "schema": "PROD_CLONE_15",
                 }
             ),
         },

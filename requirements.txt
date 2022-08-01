@@ -1,3 +1,4 @@
 dagster
 dagster-cloud
 requests
+dagster-snowflake

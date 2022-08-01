@@ -1,11 +1,10 @@
 import csv
 import requests
 
-from dagster import repository, load_assets_from_current_module, asset, build_op_context
+from dagster import repository, build_op_context, with_resources, resource
 from dagster_snowflake import build_snowflake_io_manager
 from dagster_snowflake_pandas import SnowflakePandasTypeHandler
-
-from dagster import repository, with_resources
+from .assets import items, comments, stories
 import os
 
 snowflake_io_manager = build_snowflake_io_manager([SnowflakePandasTypeHandler()])
@@ -19,8 +18,6 @@ ITEM_FIELD_NAMES = ["id", "type", "title", "by"]
 from typing import Any, Dict, Optional
 
 import requests
-
-from dagster import resource
 
 
 class HNAPIClient:
@@ -78,42 +75,6 @@ class StubHNClient:
 @resource
 def stub_hn_client():
     return StubHNClient()
-
-
-@asset(
-    config_schema={"N": int},
-    required_resource_keys={"hn_client"},
-    io_manager_key="snowflake_io_manager",
-)
-def items(context) -> pd.DataFrame:
-    """Items from the Hacker News API: each is a story or a comment on a story."""
-    hn_client = context.resources.hn_client
-
-    max_id = hn_client.fetch_max_item_id()
-    rows = []
-    # Hacker News API is 1-indexed, so adjust range by 1
-    for item_id in range(max_id - context.op_config["N"] + 1, max_id + 1):
-        rows.append(hn_client.fetch_item_by_id(item_id))
-
-    result = pd.DataFrame(rows, columns=hn_client.item_field_names).drop_duplicates(subset=["id"])
-    result.rename(columns={"by": "user_id"}, inplace=True)
-    return result
-
-
-@asset(
-    io_manager_key="snowflake_io_manager",
-)
-def comments(items: pd.DataFrame) -> pd.DataFrame:
-    """Comments from the Hacker News API."""
-    return items[items["type"] == "comment"]
-
-
-@asset(
-    io_manager_key="snowflake_io_manager",
-)
-def stories(items: pd.DataFrame) -> pd.DataFrame:
-    """Stories from the Hacker News API."""
-    return items[items["type"] == "story"]
 
 
 # Note that storing passwords in configuration is bad practice. It will be resolved later in the guide.

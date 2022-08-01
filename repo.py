@@ -144,6 +144,7 @@ def repo():
                     "schema": "PROD_CLONE_15",
                 }
             ),
+            "hn_client": hn_api_client,
         },
     }
     deployment_name = os.getenv("DAGSTER_DEPLOYMENT", "local")
